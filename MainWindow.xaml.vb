@@ -2,28 +2,54 @@
 Imports System.Threading
 Imports System.ComponentModel
 Imports System.Collections.ObjectModel
+Imports Microsoft.Win32
+Imports Newtonsoft.Json
 
 Class MainWindow
     Private Sub MainWindow_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
         Try
+            Me.Icon = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(My.Resources.cloud_icon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions)
+
             If Not CheckNetRcFile() Then
                 Me.Close()
                 Exit Sub
             End If
 
             SetInfo()
-
+            SetShellExtension()
             ReadParameter()
         Catch ex As Exception
             MessageBox.ShowBox(ex)
         End Try
     End Sub
 
+    Private Sub SetShellExtension()
+        Dim runningDir As String = IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName)
+        Dim batFileName As String = "fb-client_setExtension.bat"
+
+        If Registry.ClassesRoot.OpenSubKey("*\shell\Paste to Filebin\command") Is Nothing AndAlso IO.File.Exists(runningDir & "\" & batFileName) Then
+            Dim procInfo As New ProcessStartInfo()
+            procInfo.UseShellExecute = True
+            procInfo.FileName = batFileName
+            procInfo.WorkingDirectory = runningDir
+            procInfo.Verb = "runas"
+            Process.Start(procInfo)
+        End If
+    End Sub
+
     Private Sub ReadParameter()
+        For i As Integer = 0 To Environment.GetCommandLineArgs.Count - 1
+            Log_WriteLine(Environment.GetCommandLineArgs(i))
+        Next
         For i As Integer = 1 To Environment.GetCommandLineArgs.Count - 1
             If IO.File.Exists(Environment.GetCommandLineArgs(i)) Then
                 SetFileInfo(Environment.GetCommandLineArgs(i))
                 tpUploadFile.Focus()
+            Else
+                Select Case Environment.GetCommandLineArgs(i)
+                    Case "-systray"
+
+                End Select
             End If
         Next
     End Sub
@@ -305,7 +331,7 @@ Class MainWindow
             Dim wf As Easy.WriteFunction
             wf = New Easy.WriteFunction(AddressOf OnWriteData)
 
-            easy.SetOpt(CURLoption.CURLOPT_URL, My.Settings.fb_host & "file/upload_history")
+            easy.SetOpt(CURLoption.CURLOPT_URL, My.Settings.fb_host & "/file/upload_history?json")
 
             headerlist.Append("Expect:")
 
@@ -335,18 +361,12 @@ Class MainWindow
     End Function
 
     Private Sub ReadContent(ByVal content As String)
-        Dim lines As List(Of String)
+        Dim pFileInfos() As pastebin_fileInfo
 
-        Dim pTMPFileInfo As pastebin_fileInfo
+        pFileInfos = JsonConvert.DeserializeObject(Of pastebin_fileInfo())(content)
 
-        lines = content.Split(New Char() {vbLf}, System.StringSplitOptions.RemoveEmptyEntries).ToList
-
-        historyListView.Items.Clear()
-
-        For i As Integer = 1 To lines.Count - 2
-            pTMPFileInfo = New pastebin_fileInfo(lines(i))
-
-            historyListView.Items.Add(pTMPFileInfo)
+        For Each fileInfo In pFileInfos
+            historyListView.Items.Add(fileInfo)
         Next
     End Sub
 
@@ -361,6 +381,14 @@ Class MainWindow
     Private Sub tpHistory_Loaded(sender As Object, e As RoutedEventArgs) Handles tpHistory.Loaded
         Try
             LoadUploadHistory()
+        Catch ex As Exception
+            MessageBox.ShowBox(ex)
+        End Try
+    End Sub
+
+    Private Sub historyLink_RequestNavigate(sender As Object, e As RequestNavigateEventArgs)
+        Try
+            Process.Start(e.Uri.ToString)
         Catch ex As Exception
             MessageBox.ShowBox(ex)
         End Try

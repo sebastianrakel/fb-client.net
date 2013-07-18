@@ -41,12 +41,23 @@
                     <ListView Margin="10,52,10,10" Name="historyListView">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Width="80" Header="id" DisplayMemberBinding="{Binding ID}" />
+                                <GridViewColumn Width="80" Header="id">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock>
+                                              <Hyperlink NavigateUri="{Binding Link}" RequestNavigate="historyLink_RequestNavigate">
+                                                <TextBlock Text="{Binding ID}"/>
+                                              </Hyperlink>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
                                 <GridViewColumn Width="120" Header="filename"  DisplayMemberBinding="{Binding Filename}" />
                                 <GridViewColumn Width="100" Header="mimetype" DisplayMemberBinding="{Binding MIMEType}"/>
-                                <GridViewColumn Width="120" Header="Date" DisplayMemberBinding="{Binding Filedate}"/>
+                                <GridViewColumn Width="140" Header="Date" DisplayMemberBinding="{Binding Date}"/>
                                 <GridViewColumn Width="220" Header="Hash" DisplayMemberBinding="{Binding Hash}"/>
                                 <GridViewColumn Width="120" Header="Size" DisplayMemberBinding="{Binding Filesize}"/>
+                              
                             </GridView>
                         </ListView.View>
                     </ListView>

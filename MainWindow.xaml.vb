@@ -150,8 +150,6 @@ Class MainWindow
             End Using
 
             Me.UploadFile(pTMPFileName)
-
-            System.IO.File.Delete(pTMPFileName)
         Catch ex As Exception
             MessageBox.ShowBox(ex)
         End Try
@@ -364,6 +362,8 @@ Class MainWindow
         Dim pFileInfos() As pastebin_fileInfo
 
         pFileInfos = JsonConvert.DeserializeObject(Of pastebin_fileInfo())(content)
+
+        historyListView.Items.Clear()
 
         For Each fileInfo In pFileInfos
             historyListView.Items.Add(fileInfo)

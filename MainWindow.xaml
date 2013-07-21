@@ -24,8 +24,9 @@
         <TabControl TabStripPlacement="Left" HorizontalContentAlignment="Left" Margin="32,0,0,50" >
             <TabItem Header="Paste">
                 <Grid Background="#FFFFFF">
-                    <TextBox Margin="10,10,10,48" TextWrapping="Wrap" Text="" Name="inputTextBox" Controls:TextboxHelper.Watermark="input text to paste here"/>
+                    <TextBox Margin="10,10,10,48" TextWrapping="Wrap" Text="" Name="inputTextBox" Controls:TextboxHelper.Watermark="input text to paste here" AcceptsReturn="true"/>
                     <Button Content="paste it!" HorizontalAlignment="Left" Margin="10,0,0,6" Width="85" Height="37" VerticalAlignment="Bottom" Name="btnUploadText"  />
+                    <Button Content="testing" HorizontalAlignment="Left" Margin="117,0,0,6" Width="85" Height="37" VerticalAlignment="Bottom" x:Name="btnUploadText_Copy" RenderTransformOrigin="4.114,0.965" />
                 </Grid>
             </TabItem>
             <TabItem Header="Upload" Name="tpUploadFile">

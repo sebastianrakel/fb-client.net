@@ -1,3 +1,6 @@
 ﻿# TODO List
 
-* context menu integration
+- [ ] quick launch
+- [ ] screenshot feature
+- [ ] systray
+- [x] context menu integration

@@ -3,7 +3,6 @@ Imports System.Threading
 Imports System.ComponentModel
 Imports System.Collections.ObjectModel
 Imports Microsoft.Win32
-Imports Newtonsoft.Json
 
 Class MainWindow
     Private Sub MainWindow_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
@@ -19,22 +18,8 @@ Class MainWindow
             SetShellExtension()
             ReadParameter()
         Catch ex As Exception
-            MessageBox.ShowBox(ex)
+            messagebox.ShowBox(ex)
         End Try
-    End Sub
-
-    Private Sub SetShellExtension()
-        Dim runningDir As String = IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName)
-        Dim batFileName As String = "fb-client_setExtension.bat"
-
-        If Registry.ClassesRoot.OpenSubKey("*\shell\Paste to Filebin\command") Is Nothing AndAlso IO.File.Exists(runningDir & "\" & batFileName) Then
-            Dim procInfo As New ProcessStartInfo()
-            procInfo.UseShellExecute = True
-            procInfo.FileName = batFileName
-            procInfo.WorkingDirectory = runningDir
-            procInfo.Verb = "runas"
-            Process.Start(procInfo)
-        End If
     End Sub
 
     Private Sub ReadParameter()
@@ -53,25 +38,6 @@ Class MainWindow
             End If
         Next
     End Sub
-
-    Private Function CheckNetRcFile() As Boolean
-        Dim netrcFilePath As String
-
-        Environment.SetEnvironmentVariable("HOME", Environment.ExpandEnvironmentVariables("%HOMEDRIVE%%HOMEPATH%"))
-
-        netrcFilePath = Environment.GetEnvironmentVariable("HOME") & "\_netrc"
-
-        If Not IO.File.Exists(netrcFilePath) Then
-            Using sw As New IO.StreamWriter(netrcFilePath)
-                sw.WriteLine(String.Format("machine {0} login USERNAME password PASSWORD", New Uri(My.Settings.fb_host).Host))
-            End Using
-
-            MessageBox.ShowBox("you have to set username and passsword in _netrc file. " & netrcFilePath)
-            Return False
-        Else
-            Return True
-        End If
-    End Function
 
     Private Sub SetInfo()
         Dim runProgramm As New Run(String.Format("Programm: {0}", My.Application.Info.Title) & vbCrLf)
@@ -96,12 +62,20 @@ Class MainWindow
     End Sub
 
     Private Sub UploadFile(ByVal sourceFilePath As String)
-        Dim backWorker As New BackgroundWorker()
+        Dim pUploadThread As New Thread(AddressOf UploadThread)
 
         If sourceFilePath Is Nothing OrElse sourceFilePath.Length = 0 Then Exit Sub
 
-        AddHandler backWorker.DoWork, AddressOf backWorker_DoWork
-        backWorker.RunWorkerAsync(sourceFilePath)
+        pUploadThread.SetApartmentState(ApartmentState.STA)
+        pUploadThread.Start(sourceFilePath)
+
+
+        'Dim backWorker As New BackgroundWorker()
+
+        'If sourceFilePath Is Nothing OrElse sourceFilePath.Length = 0 Then Exit Sub
+
+        'AddHandler backWorker.DoWork, AddressOf backWorker_DoWork
+        'backWorker.RunWorkerAsync(sourceFilePath)
 
         Me.clipboardLink.Visibility = Windows.Visibility.Hidden
         Me.btnClipboardCopy.Visibility = Windows.Visibility.Hidden
@@ -109,8 +83,7 @@ Class MainWindow
         Me.labelUploadProgress.Visibility = Windows.Visibility.Visible
     End Sub
 
-    Public Sub OnDebug(ByVal infoType As CURLINFOTYPE, _
-        ByVal msg As String, ByVal extraData As Object)
+    Private Sub OnDebug(ByVal infoType As CURLINFOTYPE, ByVal msg As String, ByVal extraData As Object)
         'only dump received data
         If (infoType = CURLINFOTYPE.CURLINFO_DATA_IN) Then
             If msg.StartsWith("http") Then SetClipboardTextDispatcher(msg)
@@ -118,9 +91,9 @@ Class MainWindow
         End If
     End Sub
 
-    Public Function OnProgress(ByVal extraData As Object, _
-        ByVal dlTotal As Double, ByVal dlNow As Double, _
-        ByVal ulTotal As Double, ByVal ulNow As Double) As Int32
+    Private Function OnProgress(ByVal extraData As Object, _
+                                ByVal dlTotal As Double, ByVal dlNow As Double, _
+                                ByVal ulTotal As Double, ByVal ulNow As Double) As Int32
 
         SetProgressDispatcher(ulNow, ulTotal)
         Return 0
@@ -151,7 +124,7 @@ Class MainWindow
 
             Me.UploadFile(pTMPFileName)
         Catch ex As Exception
-            MessageBox.ShowBox(ex)
+            messagebox.ShowBox(ex)
         End Try
     End Sub
 
@@ -177,7 +150,7 @@ Class MainWindow
 
             Clipboard.SetText(Me.clipboardLink.Text)
         Catch ex As Exception
-            MessageBox.ShowBox(ex)
+            messagebox.ShowBox(ex)
         End Try
     End Sub
 
@@ -194,7 +167,7 @@ Class MainWindow
                 End If
             End With
         Catch ex As Exception
-            MessageBox.ShowBox(ex)
+            messagebox.ShowBox(ex)
         End Try
     End Sub
 
@@ -238,55 +211,25 @@ Class MainWindow
         Try
             Me.UploadFile(_UploadFilePath)
         Catch ex As Exception
-            MessageBox.ShowBox(ex)
+            messagebox.ShowBox(ex)
+        End Try
+    End Sub
+
+    Private Sub UploadThread(ByVal uploadFileFullPath As String)
+        Try
+            Throw New Exception("hey fehler")
+            FileBin.UploadFile(uploadFileFullPath, New Easy.DebugFunction(AddressOf OnDebug), New Easy.ProgressFunction(AddressOf OnProgress))
+        Catch ex As Exception
+            messagebox.ShowBox(ex)
         End Try
     End Sub
 
     Private Sub backWorker_DoWork(sender As Object, e As DoWorkEventArgs)
         Try
-            Curl.GlobalInit(CURLinitFlag.CURL_GLOBAL_ALL)
-
-            Dim headerlist As New Slist
-
-            ' <form action="http://mybox/cgi-bin/myscript.cgi
-            '  method="post" enctype="multipart/form-data">
-            Dim mf As MultiPartForm
-            mf = New MultiPartForm()
-
-            mf.AddSection(CURLformoption.CURLFORM_COPYNAME, "file", _
-               CURLformoption.CURLFORM_FILE, e.Argument, _
-               CURLformoption.CURLFORM_END)
-
-            Dim easy As Easy
-            easy = New Easy
-
-            Dim df As Easy.DebugFunction
-            df = New Easy.DebugFunction(AddressOf OnDebug)
-            easy.SetOpt(CURLoption.CURLOPT_DEBUGFUNCTION, df)
-            easy.SetOpt(CURLoption.CURLOPT_VERBOSE, True)
-
-            Dim pf As Easy.ProgressFunction
-            pf = New Easy.ProgressFunction(AddressOf OnProgress)
-            easy.SetOpt(CURLoption.CURLOPT_PROGRESSFUNCTION, pf)
-
-            easy.SetOpt(CURLoption.CURLOPT_URL, My.Settings.fb_host)
-            easy.SetOpt(CURLoption.CURLOPT_HTTPPOST, mf)
-
-            headerlist.Append("Expect:")
-
-            easy.SetOpt(CURLoption.CURLOPT_HTTPHEADER, headerlist)
-            easy.SetOpt(CURLoption.CURLOPT_NETRC, CURLnetrcOption.CURL_NETRC_REQUIRED)
-
-            easy.SetOpt(CURLoption.CURLOPT_USERAGENT, "fb-client.net")
-            easy.SetOpt(CURLoption.CURLOPT_SSL_VERIFYPEER, False)
-            easy.SetOpt(CURLoption.CURLOPT_FOLLOWLOCATION, True)
-
-            easy.Perform()
-            easy.Cleanup()
-            mf.Free()
-            Curl.GlobalCleanup()
+            Throw New Exception("hey fehler")
+            FileBin.UploadFile(e.Argument, New Easy.DebugFunction(AddressOf OnDebug), New Easy.ProgressFunction(AddressOf OnProgress))
         Catch ex As Exception
-            MessageBox.ShowBox(ex)
+            messagebox.ShowBox(ex)
         End Try
     End Sub
 
@@ -294,7 +237,7 @@ Class MainWindow
         Try
             Process.Start(e.Uri.ToString)
         Catch ex As Exception
-            MessageBox.ShowBox(ex)
+            messagebox.ShowBox(ex)
         End Try
     End Sub
 
@@ -308,64 +251,18 @@ Class MainWindow
                 Case 1
                     SetFileInfo(fileNames(0))
                 Case Is > 1
-                    MessageBox.ShowBox("at the moment only one file, sorry")
+                    messagebox.ShowBox("at the moment only one file, sorry")
                 Case Else
-                    MessageBox.ShowBox("somethin went wrong with this file, sorry")
+                    messagebox.ShowBox("somethin went wrong with this file, sorry")
             End Select
         Catch ex As Exception
-            MessageBox.ShowBox(ex)
+            messagebox.ShowBox(ex)
         End Try
     End Sub
-
     Private Sub LoadUploadHistory()
-        Try
-            Curl.GlobalInit(CURLinitFlag.CURL_GLOBAL_ALL)
-
-            Dim headerlist As New Slist
-
-            Dim easy As Easy
-            easy = New Easy
-
-            Dim wf As Easy.WriteFunction
-            wf = New Easy.WriteFunction(AddressOf OnWriteData)
-
-            easy.SetOpt(CURLoption.CURLOPT_URL, My.Settings.fb_host & "/file/upload_history?json")
-
-            headerlist.Append("Expect:")
-
-            easy.SetOpt(CURLoption.CURLOPT_HTTPHEADER, headerlist)
-            easy.SetOpt(CURLoption.CURLOPT_NETRC, CURLnetrcOption.CURL_NETRC_REQUIRED)
-
-            easy.SetOpt(CURLoption.CURLOPT_WRITEFUNCTION, wf)
-
-            easy.SetOpt(CURLoption.CURLOPT_USERAGENT, "fb-client.net")
-            easy.SetOpt(CURLoption.CURLOPT_SSL_VERIFYPEER, False)
-            easy.SetOpt(CURLoption.CURLOPT_FOLLOWLOCATION, True)
-
-            easy.Perform()
-            easy.Cleanup()
-            Curl.GlobalCleanup()
-        Catch ex As Exception
-            MessageBox.ShowBox(ex)
-        End Try
-    End Sub
-
-
-    Public Function OnWriteData(ByVal buf() As Byte, _
-       ByVal size As Int32, ByVal nmemb As Int32, _
-       ByVal extraData As Object) As Int32
-        ReadContent(System.Text.Encoding.UTF8.GetString(buf))
-        Return size * nmemb
-    End Function
-
-    Private Sub ReadContent(ByVal content As String)
-        Dim pFileInfos() As pastebin_fileInfo
-
-        pFileInfos = JsonConvert.DeserializeObject(Of pastebin_fileInfo())(content)
-
         historyListView.Items.Clear()
 
-        For Each fileInfo In pFileInfos
+        For Each fileInfo In GetUploadHistory()
             historyListView.Items.Add(fileInfo)
         Next
     End Sub
@@ -374,15 +271,7 @@ Class MainWindow
         Try
             LoadUploadHistory()
         Catch ex As Exception
-            MessageBox.ShowBox(ex)
-        End Try
-    End Sub
-
-    Private Sub tpHistory_Loaded(sender As Object, e As RoutedEventArgs) Handles tpHistory.Loaded
-        Try
-            LoadUploadHistory()
-        Catch ex As Exception
-            MessageBox.ShowBox(ex)
+            messagebox.ShowBox(ex)
         End Try
     End Sub
 
@@ -390,7 +279,15 @@ Class MainWindow
         Try
             Process.Start(e.Uri.ToString)
         Catch ex As Exception
-            MessageBox.ShowBox(ex)
+            messagebox.ShowBox(ex)
+        End Try
+    End Sub
+
+    Private Sub btnUploadText_Copy_Click(sender As Object, e As RoutedEventArgs) Handles btnUploadText_Copy.Click
+        Try
+            Throw New Exception("test")
+        Catch ex As Exception
+            messagebox.ShowBox(ex)
         End Try
     End Sub
 End Class

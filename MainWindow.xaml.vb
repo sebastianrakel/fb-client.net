@@ -217,17 +217,7 @@ Class MainWindow
 
     Private Sub UploadThread(ByVal uploadFileFullPath As String)
         Try
-            Throw New Exception("hey fehler")
             FileBin.UploadFile(uploadFileFullPath, New Easy.DebugFunction(AddressOf OnDebug), New Easy.ProgressFunction(AddressOf OnProgress))
-        Catch ex As Exception
-            messagebox.ShowBox(ex)
-        End Try
-    End Sub
-
-    Private Sub backWorker_DoWork(sender As Object, e As DoWorkEventArgs)
-        Try
-            Throw New Exception("hey fehler")
-            FileBin.UploadFile(e.Argument, New Easy.DebugFunction(AddressOf OnDebug), New Easy.ProgressFunction(AddressOf OnProgress))
         Catch ex As Exception
             messagebox.ShowBox(ex)
         End Try
@@ -237,7 +227,7 @@ Class MainWindow
         Try
             Process.Start(e.Uri.ToString)
         Catch ex As Exception
-            messagebox.ShowBox(ex)
+            messageBox.ShowBox(ex)
         End Try
     End Sub
 
@@ -278,14 +268,6 @@ Class MainWindow
     Private Sub historyLink_RequestNavigate(sender As Object, e As RequestNavigateEventArgs)
         Try
             Process.Start(e.Uri.ToString)
-        Catch ex As Exception
-            messagebox.ShowBox(ex)
-        End Try
-    End Sub
-
-    Private Sub btnUploadText_Copy_Click(sender As Object, e As RoutedEventArgs) Handles btnUploadText_Copy.Click
-        Try
-            Throw New Exception("test")
         Catch ex As Exception
             messagebox.ShowBox(ex)
         End Try

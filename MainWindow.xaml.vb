@@ -9,34 +9,10 @@ Class MainWindow
         Try
             Me.Icon = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(My.Resources.cloud_icon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions)
 
-            If Not CheckNetRcFile() Then
-                Me.Close()
-                Exit Sub
-            End If
-
             SetInfo()
-            SetShellExtension()
-            ReadParameter()
         Catch ex As Exception
             messagebox.ShowBox(ex)
         End Try
-    End Sub
-
-    Private Sub ReadParameter()
-        For i As Integer = 0 To Environment.GetCommandLineArgs.Count - 1
-            Log_WriteLine(Environment.GetCommandLineArgs(i))
-        Next
-        For i As Integer = 1 To Environment.GetCommandLineArgs.Count - 1
-            If IO.File.Exists(Environment.GetCommandLineArgs(i)) Then
-                SetFileInfo(Environment.GetCommandLineArgs(i))
-                tpUploadFile.Focus()
-            Else
-                Select Case Environment.GetCommandLineArgs(i)
-                    Case "-systray"
-
-                End Select
-            End If
-        Next
     End Sub
 
     Private Sub SetInfo()
@@ -103,7 +79,7 @@ Class MainWindow
         Me.LogTextBox.Text = ""
     End Sub
 
-    Private Sub Log_WriteLine(ByVal input As String)
+    Public Sub Log_WriteLine(ByVal input As String)
         Dim dispatcherOp As System.Windows.Threading.DispatcherOperation = Me.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Normal, New Action(Sub() Me.LogTextBox.Text &= input & vbCrLf))
     End Sub
 
@@ -173,7 +149,7 @@ Class MainWindow
 
     Private _UploadFilePath As String
 
-    Private Sub SetFileInfo(ByVal filePath As String)
+    Public Sub SetFileInfo(ByVal filePath As String)
         _UploadFilePath = filePath
 
         Dim fileInfo As New IO.FileInfo(filePath)
@@ -188,6 +164,7 @@ Class MainWindow
         Me.inputDragDrop.Content = stringbuild.ToString
 
         Me.btnUploadFile.Visibility = Windows.Visibility.Visible
+        tpUploadFile.Focus()
     End Sub
 
     Private Sub SetProgressDispatcher(ByVal value As Integer, ByVal maxValue As Integer)

@@ -5,5 +5,8 @@
     <Setting Name="fb_host" Type="System.String" Scope="User">
       <Value Profile="(Default)">https://paste.xinu.at</Value>
     </Setting>
+    <Setting Name="showSystrayInfo" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -1,13 +1,13 @@
 ﻿Public Class messageBox
-    Public Shared Sub ShowBox(ByVal text As String)
+    Public Shared Function ShowBox(ByVal text As String, Optional ByVal buttons As MessageBoxButton = MessageBoxButton.OK) As Boolean
         Dim msgBox As New messageBox
 
         msgBox.SetText(text)
-        msgBox.ShowDialog()
-    End Sub
+        msgBox.SetButtons(buttons)
+        Return msgBox.ShowDialog()
+    End Function
 
     Public Shared Sub ShowBox(ByVal ex As Exception)
-
         Dim stringBuilder As New System.Text.StringBuilder
         Dim msgBox As New messageBox
 
@@ -30,8 +30,39 @@
         MessageTextBox.Text = text
     End Sub
 
+    Public Sub SetButtons(buttons As MessageBoxButton)
+        Select Case buttons
+            Case MessageBoxButton.YesNo
+                btnOk.Visibility = Windows.Visibility.Hidden
+                btnYes.Visibility = Windows.Visibility.Visible
+                btnNo.Visibility = Windows.Visibility.Visible
+            Case MessageBoxButton.OK
+                btnOk.Visibility = Windows.Visibility.Visible
+                btnYes.Visibility = Windows.Visibility.Hidden
+                btnNo.Visibility = Windows.Visibility.Hidden
+        End Select
+    End Sub
+
     Private Sub btnOk_Click(sender As Object, e As RoutedEventArgs) Handles btnOk.Click
         Try
+            Me.Close()
+        Catch ex As Exception
+            messageBox.ShowBox(ex)
+        End Try
+    End Sub
+
+    Private Sub btnYes_Click(sender As Object, e As RoutedEventArgs) Handles btnYes.Click
+        Try
+            Me.DialogResult = True
+            Me.Close()
+        Catch ex As Exception
+            messageBox.ShowBox(ex)
+        End Try
+    End Sub
+
+    Private Sub btnNo_Click(sender As Object, e As RoutedEventArgs) Handles btnNo.Click
+        Try
+            Me.DialogResult = False
             Me.Close()
         Catch ex As Exception
             messageBox.ShowBox(ex)

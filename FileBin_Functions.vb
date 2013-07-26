@@ -68,6 +68,7 @@ Public Module FileBin
             .SetOpt(CURLoption.CURLOPT_HTTPHEADER, headerlist)
             .SetOpt(CURLoption.CURLOPT_NETRC, CURLnetrcOption.CURL_NETRC_REQUIRED)
 
+            .SetOpt(CURLoption.CURLOPT_BUFFERSIZE, 4 * 8192)
             .SetOpt(CURLoption.CURLOPT_WRITEFUNCTION, wf)
 
             .SetOpt(CURLoption.CURLOPT_USERAGENT, GetUseragentIdentifier)

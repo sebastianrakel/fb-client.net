@@ -57,15 +57,15 @@
     <ApplicationManifest>My Project\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Jayrock.Json, Version=0.9.12915.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\Jayrock.Json.dll</HintPath>
+    </Reference>
     <Reference Include="LibCurlNet">
       <HintPath>.\LibCurlNet.dll</HintPath>
     </Reference>
     <Reference Include="MahApps.Metro">
       <HintPath>packages\MahApps.Metro.0.10.1.1\lib\net40\MahApps.Metro.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Newtonsoft.Json\Src\Newtonsoft.Json\bin\Debug\Net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -87,6 +87,7 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="json_convert.vb" />
     <Compile Include="Program.vb" />
     <Compile Include="ScreenshotSnipping.vb">
       <SubType>Form</SubType>
@@ -180,6 +181,12 @@
   <ItemGroup>
     <None Include="Resources\cloud_icon.ico" />
     <Resource Include="cloud_icon.ico" />
+    <Content Include="Jayrock.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Jayrock.Json.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="libcurl.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

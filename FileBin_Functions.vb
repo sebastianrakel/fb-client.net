@@ -1,5 +1,5 @@
 ﻿Imports SeasideResearch.LibCurlNet
-Imports Newtonsoft.Json
+
 
 Public Module FileBin
     Private Function GetUseragentIdentifier() As String
@@ -91,7 +91,11 @@ Public Module FileBin
 
         pContent = System.Text.Encoding.UTF8.GetString(buf)
 
-        _LastHistoryFileInfos = JsonConvert.DeserializeObject(Of pastebin_fileInfo())(pContent).ToList
+        Using sw As New IO.StreamWriter("json.txt")
+            sw.Write(pContent)
+        End Using
+
+        _LastHistoryFileInfos = Jayrock.Json.Conversion.JsonConvert.Import(Of pastebin_fileInfo())(pContent).ToList
 
         Return size * nmemb
     End Function

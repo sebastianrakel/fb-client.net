@@ -48,11 +48,11 @@ Public Module FileBin
         Curl.GlobalCleanup()
     End Sub
 
-    Private _LastHistoryFileInfos As List(Of pastebin_fileInfo)
-
     Public Function GetUploadHistory() As List(Of pastebin_fileInfo)
         'must happend first
         Curl.GlobalInit(CURLinitFlag.CURL_GLOBAL_ALL)
+
+        _CompleteHistoryJSONOutput = ""
 
         Dim easy As New Easy
         Dim headerlist As New Slist
@@ -68,7 +68,7 @@ Public Module FileBin
             .SetOpt(CURLoption.CURLOPT_HTTPHEADER, headerlist)
             .SetOpt(CURLoption.CURLOPT_NETRC, CURLnetrcOption.CURL_NETRC_REQUIRED)
 
-            .SetOpt(CURLoption.CURLOPT_BUFFERSIZE, 4 * 8192)
+            .SetOpt(CURLoption.CURLOPT_BUFFERSIZE, 8 * 8192)
             .SetOpt(CURLoption.CURLOPT_WRITEFUNCTION, wf)
 
             .SetOpt(CURLoption.CURLOPT_USERAGENT, GetUseragentIdentifier)
@@ -81,21 +81,22 @@ Public Module FileBin
 
         Curl.GlobalCleanup()
 
-        Return _LastHistoryFileInfos
+
+        If _CompleteHistoryJSONOutput.Length > 0 Then
+            Return Jayrock.Json.Conversion.JsonConvert.Import(Of pastebin_fileInfo())(_CompleteHistoryJSONOutput).ToList()
+        Else
+            Return Nothing
+        End If
     End Function
+
+    Dim _CompleteHistoryJSONOutput As String
 
     Public Function OnWriteData(ByVal buf() As Byte, _
                                   ByVal size As Int32, ByVal nmemb As Int32, _
                                   ByVal extraData As Object) As Int32
-        Dim pContent As String = ""
 
-        pContent = System.Text.Encoding.UTF8.GetString(buf)
 
-        Using sw As New IO.StreamWriter("json.txt")
-            sw.Write(pContent)
-        End Using
-
-        _LastHistoryFileInfos = Jayrock.Json.Conversion.JsonConvert.Import(Of pastebin_fileInfo())(pContent).ToList
+        _CompleteHistoryJSONOutput &= System.Text.Encoding.UTF8.GetString(buf)
 
         Return size * nmemb
     End Function

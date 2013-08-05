@@ -249,4 +249,63 @@ Class MainWindow
             messagebox.ShowBox(ex)
         End Try
     End Sub
+
+    Private Sub historyListView_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles historyListView.SelectionChanged
+        Try
+            SetPreview()
+        Catch ex As Exception
+            messageBox.ShowBox(ex)
+        End Try
+    End Sub
+
+    Private Sub ShowPreview_Checked(sender As Object, e As RoutedEventArgs) Handles ShowPreview.Checked
+        Try
+            If Me.IsLoaded Then
+                historyPreview.Visibility = Windows.Visibility.Visible
+                HistorySplitter.Visibility = Windows.Visibility.Visible
+                HistoryRightColumn.Width = New GridLength(353, GridUnitType.Star)
+
+                SetPreview()
+            End If
+        Catch ex As Exception
+            messageBox.ShowBox(ex)
+        End Try
+    End Sub
+
+    Private Sub SetPreview()
+        Dim pMIMEType As String, _
+            pURI As Uri, _
+            pTMPFileInfo As pastebin_fileInfo
+        Try
+            pURI = New System.Uri("about:blank")
+
+            If ShowPreview.IsChecked = True AndAlso historyListView.SelectedItem IsNot Nothing Then
+                pTMPFileInfo = CType(historyListView.SelectedItem, pastebin_fileInfo)
+                pMIMEType = pTMPFileInfo.MIMEType.ToLower
+
+                Select Case True
+                    Case pMIMEType.StartsWith("image/")
+                        pURI = New Uri(pTMPFileInfo.Link)
+                    Case pMIMEType = "text/plain"
+                        pURI = New Uri(pTMPFileInfo.Link)
+                End Select
+            End If
+
+            historyPreview.Source = pURI
+        Catch ex As Exception
+            messageBox.ShowBox(ex)
+        End Try
+    End Sub
+
+    Private Sub ShowPreview_Unchecked(sender As Object, e As RoutedEventArgs) Handles ShowPreview.Unchecked
+        Try
+            historyPreview.Visibility = Windows.Visibility.Hidden
+            HistoryRightColumn.Width = New GridLength(0)
+            HistorySplitter.Visibility = Windows.Visibility.Hidden
+
+            SetPreview()
+        Catch ex As Exception
+            messageBox.ShowBox(ex)
+        End Try
+    End Sub
 End Class

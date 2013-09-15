@@ -29,9 +29,10 @@ namespace fb_client.net
         {
             try
             {
-                this.Icon = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(fb_client.net.Properties.Resources.cloud_icon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-
                 SetInfo();
+
+                Program.filebin.UploadFinished += filebin_UploadFinished;
+                Program.filebin.UploadProgress += filebin_UploadProgress;
             }
             catch (Exception ex)
             {
@@ -39,10 +40,44 @@ namespace fb_client.net
             }
         }
 
+        void filebin_UploadProgress(object sender, libfbclientnet.UploadProgressEventArgs e)
+        {
+            SetProgressDispatcher(e.UploadCurrent, e.UploadTotal);
+        }
+
+        private void SetProgressDispatcher(double value, double maxValue)
+        {
+            this.Dispatcher.Invoke(new Action<double[]>(SetProgress), new double[] {
+			value,
+			maxValue
+		});
+        }
+
+        private void SetProgress(double[] values)
+        {
+            int percentValue = 0;
+
+            this.uploadProgressBar.Maximum = 100;
+
+            if (values[1] == 0)
+                return;
+
+            percentValue = (int)((values[0] * 100) / values[1]);
+
+            this.uploadProgressBar.Value = percentValue;
+            this.labelUploadProgress.Content = values[0] + " / " + values[1];
+        }
+
+
+        void filebin_UploadFinished(object sender, libfbclientnet.UploadFinishedEventArgs e)
+        {
+            
+        }
+
         private void SetInfo()
         {
-            Run runProgramm = new Run(string.Format("Programm: {0}", System.Windows.Forms.Application.ProductName));
-            Run runVersion = new Run(string.Format("Version: {0}.{1}", System.Windows.Forms.Application.ProductVersion.ToString()));
+            Run runProgramm = new Run(string.Format("Programm: {0} \n", System.Windows.Forms.Application.ProductName));
+            Run runVersion = new Run(string.Format("Version: {0} \n", System.Windows.Forms.Application.ProductVersion.ToString()));
             Run runSource = new Run("Source: ");
             Run runSourceLink = new Run("https://github.com/sebastianrakel/fb-client.net");
 
@@ -72,6 +107,32 @@ namespace fb_client.net
             }
         }
 
+        
+        private void btnUploadText_Click(object sender, RoutedEventArgs e)
+        {
+            string filePath = System.IO.Path.GetTempPath();
 
+            if (this.inputTextBox.Text.Length == 0)
+            {
+                fb_messageBox.ShowBox("no input given");
+                return;
+            }
+
+            if(!filePath.EndsWith("\\")) { filePath += "\\"; }
+
+            filePath += "stdin";
+
+            using (System.IO.StreamWriter sw = new System.IO.StreamWriter(filePath, false))
+            {
+                sw.Write(this.inputTextBox.Text);
+            }
+
+            Program.filebin.UploadFileAsync(filePath);
+        }
+
+        private void btnRefresh_Click(object sender, RoutedEventArgs e)
+        {
+
+        }        
     }
 }

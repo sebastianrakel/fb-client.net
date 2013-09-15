@@ -10,7 +10,9 @@ namespace fb_client.net
     {
         private static MainWindow _guiWindow;
         private static System.Windows.Application _app;
-        private static System.Windows.Forms.NotifyIcon _notify;        
+        private static System.Windows.Forms.NotifyIcon _notify;
+
+        public static libfbclientnet.filebin filebin;
         
         [STAThread]
         public static void Main(string[] args)
@@ -18,9 +20,14 @@ namespace fb_client.net
             _notify = new NotifyIcon();
             _notify.Icon = fb_client.net.Properties.Resources.cloud_icon;
             _notify.Visible = true;
-
+            
             buildUpNotify();
 
+            GlobalFunctions.CheckForAPIKey();
+
+            filebin = new libfbclientnet.filebin("https://paste.xinu.at", "fb-client.net");
+            filebin.APIKey = fb_client.net.Properties.Settings.Default.apikey;
+                        
             _app = new System.Windows.Application();
             _app.ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown;
                         

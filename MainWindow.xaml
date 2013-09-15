@@ -1,12 +1,12 @@
 ﻿<Window x:Class="fb_client.net.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="410" Width="900" Loaded="Window_Loaded">
+        Title="MainWindow" Height="457" Width="900" Loaded="Window_Loaded">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <TabControl  HorizontalContentAlignment="Left" Margin="10" >
+        <TabControl  HorizontalContentAlignment="Left" Margin="10,10,10,39" >
             <TabItem Header="Paste">
                 <Grid Background="#FFFFFF">
                     <Grid.ColumnDefinitions>
@@ -14,7 +14,7 @@
                         <ColumnDefinition Width="862*"/>
                     </Grid.ColumnDefinitions>
                     <TextBox Margin="7,10,10,48" TextWrapping="Wrap" Text="" Name="inputTextBox" AcceptsReturn="true" Grid.Column="1"/>
-                    <Button Content="paste it!" HorizontalAlignment="Left" Margin="7,0,0,6" Width="85" Height="37" VerticalAlignment="Bottom" Name="btnUploadText" Grid.Column="1"  />
+                    <Button Content="paste it!" HorizontalAlignment="Left" Margin="7,0,0,6" Width="85" Height="37" VerticalAlignment="Bottom" Name="btnUploadText" Grid.Column="1" Click="btnUploadText_Click"  />
                 </Grid>
             </TabItem>
             <TabItem Header="Upload" Name="tpUploadFile">
@@ -26,7 +26,7 @@
             </TabItem>
             <TabItem Header="History" Name="tpHistory">
                 <Grid Background="#FFFFFF">
-                    <Button Content="Refresh" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="84" Click="btnRefresh_Click"/>
+                    <Button Name="btnRefresh" Content="Refresh" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="84" Click="btnRefresh_Click"/>
                     <ListView Margin="10,52,10,10" Name="historyListView">
                         <ListView.View>
                             <GridView>
@@ -34,7 +34,7 @@
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock>
-                                              <Hyperlink NavigateUri="{Binding Link}" RequestNavigate="historyLink_RequestNavigate">
+                                              <Hyperlink NavigateUri="{Binding Link}" RequestNavigate="hyperLink_requested">
                                                 <TextBlock Text="{Binding ID}"/>
                                               </Hyperlink>
                                             </TextBlock>
@@ -63,10 +63,10 @@
                     <Label Content="Log" HorizontalAlignment="Left" Margin="10,103,0,0" VerticalAlignment="Top" Width="81"/>
                 </Grid>
             </TabItem>
-        </TabControl>
-        <ProgressBar HorizontalAlignment="Left" Margin="32,0,0,14" Width="197" Height="25" VerticalAlignment="Bottom" Name="uploadProgressBar" Visibility="Hidden" />
+        </TabControl>        
         <Label HorizontalAlignment="Left" Margin="234,380,0,0" VerticalAlignment="Top" Width="120" Name="labelUploadProgress" Visibility="hidden"/>
         <Button Content="copy to clipboard" HorizontalAlignment="Left" Margin="359,0,0,8" Width="159" Height="37" VerticalAlignment="Bottom" Name="btnClipboardCopy" Visibility="Hidden" />
         <TextBox HorizontalAlignment="Left" Height="23"  Margin="32,0,0,13" TextWrapping="NoWrap"  Text="" Width="322" VerticalAlignment="Bottom" IsReadOnly="True" Name="clipboardLink" MaxLines="1" Visibility="Hidden" />
+        <ProgressBar HorizontalAlignment="Left" Height="22" Margin="10,391,0,0" VerticalAlignment="Top" Width="219" Name="uploadProgressBar"/>
     </Grid>
 </Window>

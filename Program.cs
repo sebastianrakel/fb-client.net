@@ -13,6 +13,8 @@ namespace fb_client.net
         private static System.Windows.Forms.NotifyIcon _notify;
 
         public static libfbclientnet.filebin filebin;
+
+        private static bool _SystrayMode;
         
         [STAThread]
         public static void Main(string[] args)
@@ -20,7 +22,8 @@ namespace fb_client.net
             _notify = new NotifyIcon();
             _notify.Icon = fb_client.net.Properties.Resources.cloud_icon;
             _notify.Visible = true;
-            
+            _notify.DoubleClick += _notify_DoubleClick;
+                        
             buildUpNotify();
 
             GlobalFunctions.CheckForAPIKey();
@@ -38,7 +41,7 @@ namespace fb_client.net
 
         private static void OpenGUI()
         {
-            if (_guiWindow == null)
+            if (_guiWindow == null || !_guiWindow.IsLoaded)
             {
                 _guiWindow = new MainWindow();                
             }
@@ -50,7 +53,7 @@ namespace fb_client.net
         {
             ContextMenuStrip pContextMenu = new ContextMenuStrip();
             ToolStripItem pTMPContextMenuItem = null;
-
+                        
             pTMPContextMenuItem = pContextMenu.Items.Add("Show");
             pTMPContextMenuItem.Click += ShowFBWindow_Click;
 
@@ -65,6 +68,18 @@ namespace fb_client.net
             pTMPContextMenuItem.Click += CloseApplication_Click;
 
             _notify.ContextMenuStrip = pContextMenu;
+        }
+
+        private static void _notify_DoubleClick(object sender, EventArgs e)
+        {
+            try
+            {
+                OpenGUI();
+            }
+            catch (Exception ex)
+            {
+                fb_messageBox.ShowBox(ex);
+            }
         }
 
         private static void closeApplication() {
@@ -101,12 +116,39 @@ namespace fb_client.net
         {
             try
             {
-
+                OpenGUI();
             }
             catch (Exception ex)
             {
                 fb_messageBox.ShowBox(ex);
             }
+        }
+
+        private static List<string> ReadParameter()
+        {
+            List<string> retList = new List<string>();
+
+            for (int i = 1; i <= Environment.GetCommandLineArgs().Length - 1; i++)
+            {
+                if (i > 0)
+                {
+                    if (System.IO.File.Exists(Environment.GetCommandLineArgs()[i]))
+                    {
+                        retList.Add(Environment.GetCommandLineArgs()[i]);
+                    }
+                    else
+                    {
+                        switch (Environment.GetCommandLineArgs()[i])
+                        {
+                            case "-systray":
+                                _SystrayMode = true;
+                                break;
+                        }
+                    }
+                }
+            }
+
+            return retList;
         }
     }
 }

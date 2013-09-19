@@ -8,29 +8,30 @@
         </Grid.RowDefinitions>
         <TabControl  HorizontalContentAlignment="Left" Margin="10,10,10,39" >
             <TabItem Header="Paste">
-                <Grid Background="#FFFFFF">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="3*"/>
-                        <ColumnDefinition Width="862*"/>
-                    </Grid.ColumnDefinitions>
+                <Grid Background="#FFFFFF">                    
                     <TextBox Margin="7,10,10,48" TextWrapping="Wrap" Text="" Name="inputTextBox" AcceptsReturn="true" Grid.Column="1"/>
                     <Button Content="paste it!" HorizontalAlignment="Left" Margin="7,0,0,6" Width="85" Height="37" VerticalAlignment="Bottom" Name="btnUploadText" Grid.Column="1" Click="btnUploadText_Click"  />
                 </Grid>
             </TabItem>
             <TabItem Header="Upload" Name="tpUploadFile">
                 <Grid Background="#FFFFFF">
-                    <Label Content="drop file here" Margin="10,10,10,48" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="LightGray" Name="inputDragDrop" AllowDrop="True" />
-                    <Button Content="upload" HorizontalAlignment="Left" Margin="10,0,0,6" Width="75" Height="37" VerticalAlignment="Bottom" Name="btnUploadFile" Visibility="Hidden" />
-                    <Button Content="search for file" Margin="0,0,10,6" Height="37" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="127" Name="btnSearchUploadFile"/>
+                    <Label Content="drop file here" Margin="10,10,10,48" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="LightGray" Name="inputDragDrop" AllowDrop="True" Drop="inputDragDrop_Drop" />
+                    <Button Content="upload" HorizontalAlignment="Left" Margin="10,0,0,6" Width="75" Height="37" VerticalAlignment="Bottom" Name="btnUploadFile" Visibility="Hidden" Click="btnUploadFile_Click"/>
+                    <Button Content="search for file" Margin="0,0,10,6" Height="37" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="127" Name="btnSearchUploadFile" Click="btnSearchUploadFile_Click"/>
                 </Grid>
             </TabItem>
             <TabItem Header="History" Name="tpHistory">
                 <Grid Background="#FFFFFF">
-                    <Button Name="btnRefresh" Content="Refresh" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="84" Click="btnRefresh_Click"/>
-                    <ListView Margin="10,52,10,10" Name="historyListView">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="0" Name="HistoryRightColumn"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Button Name="btnRefresh" Content="Refresh" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="84" Click="btnRefresh_Click" Grid.Column="0"/>
+                    <ListView Margin="10,37,10,10" Name="historyListView" Grid.Column="0" SelectionChanged="historyListView_SelectionChanged">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Width="80" Header="id">
+                                <GridViewColumn Width="80" Header="ID">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock>
@@ -41,8 +42,8 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Width="120" Header="filename"  DisplayMemberBinding="{Binding Filename}" />
-                                <GridViewColumn Width="100" Header="mimetype" DisplayMemberBinding="{Binding MIMEType}"/>
+                                <GridViewColumn Width="120" Header="Filename"  DisplayMemberBinding="{Binding Filename}" />
+                                <GridViewColumn Width="100" Header="MIMEType" DisplayMemberBinding="{Binding MIMEType}"/>
                                 <GridViewColumn Width="140" Header="Date" DisplayMemberBinding="{Binding Date}"/>
                                 <GridViewColumn Width="220" Header="Hash" DisplayMemberBinding="{Binding Hash}"/>
                                 <GridViewColumn Width="120" Header="Size" DisplayMemberBinding="{Binding Filesize}"/>
@@ -50,6 +51,10 @@
                             </GridView>
                         </ListView.View>
                     </ListView>
+                    <Label Content="last refresh: never" Margin="0,6,10,0" VerticalAlignment="Top" Name="labelLastRefresh" Grid.Column="0" HorizontalAlignment="Right" Width="227"/>
+                    <GridSplitter ResizeDirection="Columns" Grid.Column="0" Height="Auto" VerticalAlignment="Stretch" Width="3" Visibility="Hidden" Name="HistorySplitter"/>
+                    <WebBrowser Name="historyPreview" Grid.Column="1" Visibility="Hidden" />
+                    <CheckBox Content="preview" HorizontalAlignment="Left" Margin="116,13,0,0" VerticalAlignment="Top" Name="checkShowPreview" Checked="checkShowPreview_Checked" />
                 </Grid>
             </TabItem>
             <TabItem Header="Info">
@@ -63,10 +68,10 @@
                     <Label Content="Log" HorizontalAlignment="Left" Margin="10,103,0,0" VerticalAlignment="Top" Width="81"/>
                 </Grid>
             </TabItem>
-        </TabControl>        
+        </TabControl>
         <Label HorizontalAlignment="Left" Margin="234,380,0,0" VerticalAlignment="Top" Width="120" Name="labelUploadProgress" Visibility="hidden"/>
-        <Button Content="copy to clipboard" HorizontalAlignment="Left" Margin="359,0,0,8" Width="159" Height="37" VerticalAlignment="Bottom" Name="btnClipboardCopy" Visibility="Hidden" />
-        <TextBox HorizontalAlignment="Left" Height="23"  Margin="32,0,0,13" TextWrapping="NoWrap"  Text="" Width="322" VerticalAlignment="Bottom" IsReadOnly="True" Name="clipboardLink" MaxLines="1" Visibility="Hidden" />
-        <ProgressBar HorizontalAlignment="Left" Height="22" Margin="10,391,0,0" VerticalAlignment="Top" Width="219" Name="uploadProgressBar"/>
+        <Button Content="copy to clipboard" HorizontalAlignment="Left" Margin="359,0,0,14" Width="159" Height="22" VerticalAlignment="Bottom" Name="btnClipboardCopy" Visibility="Hidden" Click="btnClipboardCopy_Click" />
+        <TextBox HorizontalAlignment="Left" Height="23"  Margin="10,0,0,13" TextWrapping="NoWrap"  Text="" Width="322" VerticalAlignment="Bottom" IsReadOnly="True" Name="clipboardLink" MaxLines="1" Visibility="Hidden" />
+        <ProgressBar HorizontalAlignment="Left" Height="22" Margin="10,391,0,0" VerticalAlignment="Top" Width="219" Name="uploadProgressBar" Visibility="Hidden"/>
     </Grid>
 </Window>

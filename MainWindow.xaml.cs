@@ -71,7 +71,14 @@ namespace fb_client.net
 
         void filebin_UploadFinished(object sender, libfbclientnet.UploadFinishedEventArgs e)
         {
-            
+            try
+            {
+                SetClipboardTextDispatcher(e.Result.URL);
+            }
+            catch (Exception ex)
+            {
+                fb_messageBox.ShowBox(ex);
+            }
         }
 
         private void SetInfo()
@@ -127,12 +134,210 @@ namespace fb_client.net
                 sw.Write(this.inputTextBox.Text);
             }
 
+            this.uploadFile(filePath);
+        }
+
+        private void uploadFile(string filePath)
+        {
+            this.clipboardLink.Visibility = System.Windows.Visibility.Hidden;
+            this.btnClipboardCopy.Visibility = System.Windows.Visibility.Hidden;
+            this.uploadProgressBar.Visibility = System.Windows.Visibility.Visible;
+            this.labelUploadProgress.Visibility = System.Windows.Visibility.Visible;
+
             Program.filebin.UploadFileAsync(filePath);
         }
 
         private void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                historyListView.Items.Clear();
+                foreach (libfbclientnet.filebin_item historyItem in Program.filebin.GetUploadHistory())
+                {
+                    historyListView.Items.Add(historyItem);
+                }
 
-        }        
+                labelLastRefresh.Content = "last refresh: " + DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss tt");
+            }
+            catch (Exception ex)
+            {
+                fb_messageBox.ShowBox(ex);
+            }
+        }
+
+        private void btnSearchUploadFile_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Microsoft.Win32.OpenFileDialog fileDlg = new Microsoft.Win32.OpenFileDialog();
+
+                
+                fileDlg.Multiselect = false;
+
+                if (fileDlg.ShowDialog() == true)
+                {
+                    SetFileInfo(fileDlg.FileName);
+                    this.btnUploadFile.Visibility = System.Windows.Visibility.Visible;
+                }
+            }
+            catch (Exception ex)
+            {
+                fb_messageBox.ShowBox(ex);
+            }
+        }
+
+        private void SetClipboardTextDispatcher(string text)
+        {
+            this.Dispatcher.BeginInvoke(new Action<string>(SetClipboardText), text);
+        }
+
+        public void SetClipboardText(string text)
+        {
+            this.uploadProgressBar.Visibility = System.Windows.Visibility.Hidden;
+            this.labelUploadProgress.Visibility = System.Windows.Visibility.Hidden;
+            this.clipboardLink.Visibility = System.Windows.Visibility.Visible;
+            this.btnClipboardCopy.Visibility = System.Windows.Visibility.Visible;
+
+            this.clipboardLink.Text = text.Trim();
+
+            this.clipboardLink.Focus();
+            this.clipboardLink.SelectAll();
+        }
+
+        private string _UploadFilePath;
+        public void SetFileInfo(string filePath)
+        {
+            _UploadFilePath = filePath;
+
+            System.IO.FileInfo fileInfo = new System.IO.FileInfo(filePath);
+
+            System.Text.StringBuilder stringbuild = new System.Text.StringBuilder();
+            
+            stringbuild.AppendLine("Filename: " + fileInfo.Name);
+            stringbuild.AppendLine("Size (bytes): " + fileInfo.Length);
+
+            this.inputDragDrop.Content = stringbuild.ToString();
+
+            this.btnUploadFile.Visibility = System.Windows.Visibility.Visible;
+            tpUploadFile.Focus();
+        }
+
+        private void btnUploadFile_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                this.uploadFile(_UploadFilePath);
+            }
+            catch (Exception ex)
+            {
+                fb_messageBox.ShowBox(ex);
+            }
+        }
+
+        private void inputDragDrop_Drop(object sender, DragEventArgs e)
+        {
+            List<string> fileNames = null;
+
+            try
+            {
+                fileNames = new List<string>((string[])e.Data.GetData(DataFormats.FileDrop));
+
+                switch (fileNames.Count)
+                {
+                    case 1:
+                        SetFileInfo(fileNames[0]);
+                        break;
+                    default:
+                        if (fileNames.Count > 1)
+                        {
+                            fb_messageBox.ShowBox("at the moment only one file, sorry");
+                        }
+                        else
+                        {
+                            fb_messageBox.ShowBox("something went wrong with this file, sorry");
+                        }
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                fb_messageBox.ShowBox(ex);
+            }
+        }
+
+        private void btnClipboardCopy_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (this.clipboardLink.Text.Trim().Length == 0)
+                    return;
+
+                Clipboard.SetText(this.clipboardLink.Text);
+            }
+            catch (Exception ex)
+            {
+                fb_messageBox.ShowBox(ex);
+            }
+        }
+
+        private void SetPreview()
+        {
+            string pMIMEType = null;
+            Uri pURI = null;
+            libfbclientnet.filebin_item pTMPFileInfo;
+
+            try
+            {
+                pURI = new System.Uri("about:blank");
+
+                if (this.checkShowPreview.IsChecked  == true && this.historyListView.SelectedItem != null)
+                {
+                    pTMPFileInfo = (libfbclientnet.filebin_item)historyListView.SelectedItem;
+                    pMIMEType = pTMPFileInfo.MIMEType.ToLower();
+
+                    if (pMIMEType.StartsWith("image/"))
+                    {
+                        pURI = new Uri(pTMPFileInfo.Link);                        
+                    } else if (pMIMEType == "text/plain") {
+                        pURI = new Uri(pTMPFileInfo.Link);                        
+                    }                    
+                }
+
+                historyPreview.Source = pURI;
+            }
+            catch (Exception ex)
+            {
+                fb_messageBox.ShowBox(ex);
+            }
+        }
+
+        private void checkShowPreview_Checked(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if(this.IsLoaded) {
+                    this.historyPreview.Visibility = this.checkShowPreview.IsChecked == true ? System.Windows.Visibility.Visible : System.Windows.Visibility.Hidden;
+                    this.HistorySplitter.Visibility = this.checkShowPreview.IsChecked == true ? System.Windows.Visibility.Visible : System.Windows.Visibility.Hidden;
+                    this.HistoryRightColumn.Width = new GridLength(0.4, GridUnitType.Star);
+                    SetPreview();
+                }
+            }
+            catch (Exception ex)
+            {
+                fb_messageBox.ShowBox(ex);
+            }
+        }
+
+        private void historyListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            try
+            {
+                SetPreview();
+            }
+            catch (Exception ex)
+            {
+                fb_messageBox.ShowBox(ex);
+            }
+        }
     }
 }

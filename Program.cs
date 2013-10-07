@@ -1,8 +1,13 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms; 
+using System.Windows.Forms;
+using System.Runtime.Remoting;
+using System.Runtime.Remoting.Channels;
+using System.Runtime.Remoting.Channels.Ipc;
 
 namespace fb_client.net
 {
@@ -13,8 +18,10 @@ namespace fb_client.net
         private static System.Windows.Forms.NotifyIcon _notify;
 
         public static libfbclientnet.filebin filebin;
-
+                
         private static bool _SystrayMode;
+
+        private static IpcRemoteObject _ipcRemoteObj;
         
         [STAThread]
         public static void Main(string[] args)
@@ -23,20 +30,114 @@ namespace fb_client.net
             _notify.Icon = fb_client.net.Properties.Resources.cloud_icon;
             _notify.Visible = true;
             _notify.DoubleClick += _notify_DoubleClick;
-                        
+            
+            
+            List<string> filelist = ReadParameter();
+
+            if (!registerIPC())
+            {
+                if (filelist.Count > 0)
+                {
+                    sendIPC(filelist[0]);                    
+                }
+
+                return;
+            }
+
+            SetShellExtension();
+
             buildUpNotify();
 
             GlobalFunctions.CheckForAPIKey();
 
-            filebin = new libfbclientnet.filebin("https://paste.xinu.at", "fb-client.net");
+            filebin = new libfbclientnet.filebin(fb_client.net.Properties.Settings.Default.fb_host, "fb-client.net");
             filebin.APIKey = fb_client.net.Properties.Settings.Default.apikey;
                         
             _app = new System.Windows.Application();
             _app.ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown;
-                        
-            OpenGUI();
+                       
+
+            if (!_SystrayMode) { OpenGUI(); }
+            
+            if (filelist.Count > 0)
+            {
+                _guiWindow.SetFileInfo(filelist[0]);
+            }
+
+            filebin.UploadFinished += filebin_UploadFinished;
             
             _app.Run();                        
+        }
+
+        private static bool registerIPC()
+        {
+            IChannel[] myIChannelArray = ChannelServices.RegisteredChannels;
+            for (int i = 0; i < myIChannelArray.Length; i++)
+            {
+                Debug.WriteLine("Name of Channel: {0}", myIChannelArray[i].ChannelName);
+                Debug.WriteLine("Priority of Channel: {0}", myIChannelArray[i].ChannelPriority.ToString());
+            }
+
+            if (ChannelServices.GetChannel("fbclient") != null)
+            {
+                return false;
+            }
+
+            try
+            {
+                IpcServerChannel channel = new IpcServerChannel("fbclient", "fbclient");
+                ChannelServices.RegisterChannel(channel, false);
+
+                _ipcRemoteObj = new IpcRemoteObject();
+                RemotingServices.Marshal(_ipcRemoteObj, "upload", typeof(IpcRemoteObject));
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static void sendIPC(string path)
+        {
+            IpcClientChannel channel = new IpcClientChannel();
+                       
+            ChannelServices.RegisterChannel(channel, true);
+
+            // Get an instance of the remote object.
+            _ipcRemoteObj = Activator.GetObject(typeof(IpcRemoteObject), "ipc://fb-client/upload") as IpcRemoteObject;
+
+            _ipcRemoteObj.uploadFile(path);
+        }
+
+        private static void filebin_UploadFinished(object sender, libfbclientnet.UploadFinishedEventArgs e)
+        {
+            try
+            {                
+                Clipboard.SetText(e.Result.URL, TextDataFormat.Text);
+                _notify.ShowBalloonTip(10000, "upload with success", e.Result.URL + "\n link copied to clipboard!", System.Windows.Forms.ToolTipIcon.Info);
+            }
+            catch (Exception ex)
+            {
+                fb_messageBox.ShowBox(ex);
+            }
+        }
+
+        public static void SetShellExtension()
+        {
+            string runningDir = System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+            string batFileName = "fb-client_setExtension.bat";
+
+            if (Registry.ClassesRoot.OpenSubKey("*\\shell\\Paste to Filebin\\command") == null && System.IO.File.Exists(runningDir + "\\" + batFileName))
+            {
+                ProcessStartInfo procInfo = new ProcessStartInfo();
+                procInfo.UseShellExecute = true;
+                procInfo.FileName = batFileName;
+                procInfo.WorkingDirectory = runningDir;
+                procInfo.Verb = "runas";
+                Process.Start(procInfo);
+            }
         }
 
         private static void OpenGUI()
@@ -105,11 +206,27 @@ namespace fb_client.net
             try
             {
 
+                System.Drawing.Image img = SnippingTool.Snip();
+
+                if (img != null)
+                {
+                    string pTMPPath = System.IO.Path.GetTempPath() + "screenshot.png";
+
+                    img.Save(pTMPPath);
+
+                    uploadFile(pTMPPath);
+                }
+
             }
             catch (Exception ex)
             {
                 fb_messageBox.ShowBox(ex);
             }
+        }
+
+        public static void uploadFile(string path)
+        {
+            filebin.UploadFileAsync(path);
         }
 
         private static void ShowFBWindow_Click(object sender, EventArgs e)

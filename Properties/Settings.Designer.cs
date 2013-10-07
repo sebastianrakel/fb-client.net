@@ -34,5 +34,14 @@ namespace fb_client.net.Properties {
                 this["apikey"] = value;
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://paste.xinu.at")]
+        public string fb_host {
+            get {
+                return ((string)(this["fb_host"]));
+            }
+        }
     }
 }

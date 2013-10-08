@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Ipc;
+using System.Collections;
 
 namespace fb_client.net
 {
@@ -16,6 +17,12 @@ namespace fb_client.net
         private static MainWindow _guiWindow;
         private static System.Windows.Application _app;
         private static System.Windows.Forms.NotifyIcon _notify;
+
+        private static string _appIPCName = Application.ExecutablePath;
+        private static string _appIPCPort = "SingleInstance";
+        private static string _appIPCURI = _appIPCName + "_" + _appIPCPort;
+        private static IpcChannel _appIPCChannel;
+
 
         public static libfbclientnet.filebin filebin;
                 
@@ -38,9 +45,14 @@ namespace fb_client.net
             {
                 if (filelist.Count > 0)
                 {
-                    sendIPC(filelist[0]);                    
+                    sendIPC(filelist[0]);
+                }
+                else
+                {
+                    sendIPC("");
                 }
 
+                _notify.Visible = false;
                 return;
             }
 
@@ -61,7 +73,7 @@ namespace fb_client.net
             
             if (filelist.Count > 0)
             {
-                _guiWindow.SetFileInfo(filelist[0]);
+                _guiWindow.SetFileInfoDispatcher(filelist[0]);
             }
 
             filebin.UploadFinished += filebin_UploadFinished;
@@ -85,11 +97,16 @@ namespace fb_client.net
 
             try
             {
-                IpcServerChannel channel = new IpcServerChannel("fbclient", "fbclient");
-                ChannelServices.RegisterChannel(channel, false);
+                Hashtable pProps = new Hashtable();
 
-                _ipcRemoteObj = new IpcRemoteObject();
-                RemotingServices.Marshal(_ipcRemoteObj, "upload", typeof(IpcRemoteObject));
+                pProps.Add("name", _appIPCName);
+                pProps.Add("portName", _appIPCName);
+
+                _appIPCChannel = new IpcChannel(pProps, null, null);
+                ChannelServices.RegisterChannel(_appIPCChannel, false);
+
+                RemotingConfiguration.RegisterWellKnownServiceType(typeof(IpcRemoteObject), _appIPCURI, WellKnownObjectMode.Singleton);
+                                
             }
             catch (Exception ex)
             {
@@ -106,9 +123,16 @@ namespace fb_client.net
             ChannelServices.RegisterChannel(channel, true);
 
             // Get an instance of the remote object.
-            _ipcRemoteObj = Activator.GetObject(typeof(IpcRemoteObject), "ipc://fb-client/upload") as IpcRemoteObject;
+            _ipcRemoteObj = Activator.GetObject(typeof(IpcRemoteObject), "ipc://" + _appIPCName + "/" + _appIPCURI) as IpcRemoteObject;
 
-            _ipcRemoteObj.uploadFile(path);
+            if (path.Length > 0)
+            {
+                _ipcRemoteObj.uploadFile(path);
+            }
+            else
+            {
+                _ipcRemoteObj.showGUI();
+            }            
         }
 
         private static void filebin_UploadFinished(object sender, libfbclientnet.UploadFinishedEventArgs e)
@@ -140,14 +164,34 @@ namespace fb_client.net
             }
         }
 
+        [STAThread]
+        public static void OpenGUIDispatcher()
+        {
+            if (_guiWindow != null)
+            {
+                _guiWindow.Dispatcher.BeginInvoke(new Action(OpenGUI));
+            }
+            else
+            {
+                OpenGUI();
+            }
+        }
+
         private static void OpenGUI()
         {
-            if (_guiWindow == null || !_guiWindow.IsLoaded)
+            if (_guiWindow == null || !_guiWindow.IsVisible)
             {
-                _guiWindow = new MainWindow();                
+                _guiWindow = new MainWindow();
+
+                _guiWindow.Closed += guiWindow_Closed;
             }
 
             _guiWindow.Show();
+        }
+
+        private static void guiWindow_Closed(object sender, EventArgs e)
+        {
+            _guiWindow = null;
         }
 
         private static void buildUpNotify()
@@ -226,6 +270,11 @@ namespace fb_client.net
 
         public static void uploadFile(string path)
         {
+            if (_guiWindow != null && _guiWindow.IsVisible)
+            {
+                _guiWindow.SetFileInfoDispatcher(path);
+            }
+
             filebin.UploadFileAsync(path);
         }
 

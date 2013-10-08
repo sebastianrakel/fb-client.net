@@ -186,12 +186,12 @@ namespace fb_client.net
             }
         }
 
-        private void SetClipboardTextDispatcher(string text)
+        public void SetClipboardTextDispatcher(string text)
         {
             this.Dispatcher.BeginInvoke(new Action<string>(SetClipboardText), text);
         }
 
-        public void SetClipboardText(string text)
+        private void SetClipboardText(string text)
         {
             this.uploadProgressBar.Visibility = System.Windows.Visibility.Hidden;
             this.labelUploadProgress.Visibility = System.Windows.Visibility.Hidden;
@@ -205,7 +205,13 @@ namespace fb_client.net
         }
 
         private string _UploadFilePath;
-        public void SetFileInfo(string filePath)
+
+        public void SetFileInfoDispatcher(string filePath)
+        {
+            this.Dispatcher.BeginInvoke(new Action<string>(SetFileInfo), filePath);
+        }
+
+        private void SetFileInfo(string filePath)
         {
             _UploadFilePath = filePath;
 

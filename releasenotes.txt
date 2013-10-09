@@ -1,0 +1,5 @@
+===== Version 1.0 / 2013-10-10 =====
+
+- implementing single instance
+- switch from VB.NET to C#.NET
+

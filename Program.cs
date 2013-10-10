@@ -164,17 +164,9 @@ namespace fb_client.net
             }
         }
 
-        [STAThread]
         public static void OpenGUIDispatcher()
         {
-            if (_guiWindow != null)
-            {
-                _guiWindow.Dispatcher.BeginInvoke(new Action(OpenGUI));
-            }
-            else
-            {
-                OpenGUI();
-            }
+            _app.Dispatcher.BeginInvoke(new Action(OpenGUI));            
         }
 
         private static void OpenGUI()
@@ -187,6 +179,7 @@ namespace fb_client.net
             }
 
             _guiWindow.Show();
+            _guiWindow.Activate();
         }
 
         private static void guiWindow_Closed(object sender, EventArgs e)

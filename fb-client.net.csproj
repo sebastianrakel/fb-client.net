@@ -114,6 +114,12 @@
   <ItemGroup>
     <None Include="Resources\cloud_icon.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\cloud_icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\cloud_icon_png.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

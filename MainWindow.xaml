@@ -3,12 +3,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow" Height="457" Width="900" Loaded="Window_Loaded">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition/>
         </Grid.RowDefinitions>
         <TabControl  HorizontalContentAlignment="Left" Margin="10,10,10,39" >
             <TabItem Header="Paste">
-                <Grid Background="#FFFFFF">                    
+                <Grid Background="#FFFFFF">
                     <TextBox Margin="7,10,10,48" TextWrapping="Wrap" Text="" Name="inputTextBox" AcceptsReturn="true" Grid.Column="1"/>
                     <Button Content="paste it!" HorizontalAlignment="Left" Margin="7,0,0,6" Width="85" Height="37" VerticalAlignment="Bottom" Name="btnUploadText" Grid.Column="1" Click="btnUploadText_Click"  />
                 </Grid>

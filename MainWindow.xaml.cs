@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -19,12 +20,25 @@ namespace fb_client.net
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
-    {        
+    {
+        private string _UploadFilePath;
+     
         public MainWindow()
         {
             InitializeComponent();
-        }
 
+            BitmapFrame bmpFrame;
+
+            MemoryStream iconStream = new MemoryStream();
+            
+            fb_client.net.Properties.Resources.cloud_icon_png.Save(iconStream, System.Drawing.Imaging.ImageFormat.Png);
+            iconStream.Seek(0, SeekOrigin.Begin);
+            bmpFrame = BitmapFrame.Create(iconStream);
+            
+
+            this.Icon = bmpFrame; 
+        }
+        
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try
@@ -203,9 +217,7 @@ namespace fb_client.net
             this.clipboardLink.Focus();
             this.clipboardLink.SelectAll();
         }
-
-        private string _UploadFilePath;
-
+        
         public void SetFileInfoDispatcher(string filePath)
         {
             this.Dispatcher.BeginInvoke(new Action<string>(SetFileInfo), filePath);

@@ -115,7 +115,7 @@ namespace fb_client.net
                 RemotingConfiguration.RegisterWellKnownServiceType(typeof(IpcRemoteObject), _appIPCURI, WellKnownObjectMode.Singleton);
                                 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }

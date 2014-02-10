@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -56,29 +57,32 @@ namespace fb_client.net
         {
             System.Net.WebRequest webReq = System.Net.WebRequest.Create(Program.updateLink);
             System.Net.WebResponse webRes = (System.Net.HttpWebResponse)webReq.GetResponse();
-
-            char[] buffer = new char[1024];
-            int bytesRead = 0;
-            int bytesToRead = (int)webRes.ContentLength;
-            int n = 0;
-
-            using (System.IO.StreamReader sr = new System.IO.StreamReader(webRes.GetResponseStream()))
+                       
+            using (System.IO.FileStream pFileStream = new System.IO.FileStream(System.IO.Path.GetFileName(new Uri(Program.updateLink).LocalPath), FileMode.Create))
             {
-                using (System.IO.StreamWriter sw = new System.IO.StreamWriter(System.IO.Path.GetFileName(new Uri(Program.updateLink).LocalPath), false))
-                {   
-                    while (bytesToRead > 0)
+                using (BinaryReader pBinaryReader = new BinaryReader(webRes.GetResponseStream()))
+                {
+                    using (BinaryWriter pBinaryWriter = new BinaryWriter(pFileStream))
                     {
-                        n = sr.Read(buffer,0, buffer.Length);
-                        if (n == 0) { break; }
-                        bytesRead += n;
-                        bytesToRead -= n;
-                        sw.Write(buffer);
+                        byte[] pBuffer = new byte[1025];
+                        int pBytesRead = 0;
+                        int pBytesDownloadProgress = 0;
+                        
+                        do {
+	                        pBytesRead = pBinaryReader.Read(pBuffer, 0, 1024);
+	                        pBytesDownloadProgress += pBytesRead;
+    	
+	                        pBinaryWriter.Write(pBuffer, 0, pBytesRead);
+                            SetProgressDispatcher(pBytesRead, webRes.ContentLength);
+                        } while (!(pBytesRead == 0));
 
-                        SetProgressDispatcher(bytesRead, webRes.ContentLength);
-                    }                   
+                        // alle Dateien schließen
+                        pBinaryWriter.Close();
+                        pBinaryReader.Close();
+                        pFileStream.Close();
+                    }
                 }
-            }
-
+            }           
             CloseWindowDispatcher();
         }
 

@@ -23,23 +23,37 @@ namespace fb_client.net
         private static string _appIPCURI = _appIPCName + "_" + _appIPCPort;
         private static IpcChannel _appIPCChannel;
 
+        public static string updateLink = @"http://sebastianrakel.github.io/fb-client.net/files/fb-client.net.zip";
+        public static string releaseNotesLinks = @"http://sebastianrakel.github.io/fb-client.net/releasenotes.txt";
+
 
         public static libfbclientnet.filebin filebin;
                 
         private static bool _SystrayMode;
+        private static int _oldPID;
+        private static bool _installUpdate = false;
 
         private static IpcRemoteObject _ipcRemoteObj;
         
         [STAThread]
         public static void Main(string[] args)
         {
+            try
+            {
+                cleanUp();
+                                                   
+            List<string> filelist = ReadParameter();
+
+            if (_installUpdate)
+            {
+                installUpdate();
+                return;
+            }
+
             _notify = new NotifyIcon();
             _notify.Icon = fb_client.net.Properties.Resources.cloud_icon;
             _notify.Visible = true;
             _notify.DoubleClick += _notify_DoubleClick;
-            
-            
-            List<string> filelist = ReadParameter();
 
             if (!registerIPC())
             {
@@ -56,6 +70,13 @@ namespace fb_client.net
                 return;
             }
 
+            if (checkForUpdate())
+            {
+                if (doUpdate()) {                    
+                    return; 
+                }
+            }
+                         
             SetShellExtension();
 
             buildUpNotify();
@@ -78,7 +99,12 @@ namespace fb_client.net
 
             filebin.UploadFinished += filebin_UploadFinished;
             
-            _app.Run();                        
+            _app.Run();
+            }
+            catch (Exception ex)
+            {
+                fb_messageBox.ShowBox(ex);
+            }
         }
 
         private static bool registerIPC()
@@ -108,7 +134,7 @@ namespace fb_client.net
                 RemotingConfiguration.RegisterWellKnownServiceType(typeof(IpcRemoteObject), _appIPCURI, WellKnownObjectMode.Singleton);
                                 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -302,6 +328,12 @@ namespace fb_client.net
                             case "-systray":
                                 _SystrayMode = true;
                                 break;
+                            case "-installUpdate":
+                                _installUpdate = true;                                
+                                break;
+                            case "-oldPID":
+                                _oldPID = Convert.ToInt32(Environment.GetCommandLineArgs()[i + 1]);
+                                break;
                         }
                     }
                 }
@@ -309,5 +341,85 @@ namespace fb_client.net
 
             return retList;
         }
+
+        private static bool checkForUpdate()
+        {
+            System.IO.FileInfo destFile = new System.IO.FileInfo(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            
+            System.Net.WebRequest sourceWebReq = System.Net.WebRequest.Create(updateLink);
+            System.Net.HttpWebResponse sourceWebRes = (System.Net.HttpWebResponse)sourceWebReq.GetResponse();
+
+            return sourceWebRes.LastModified > destFile.LastWriteTime;            
+        }
+
+        private static bool doUpdate()
+        {
+            System.IO.DirectoryInfo destDir;
+            UpdateWindow frmUpdate = new UpdateWindow();
+
+            if (frmUpdate.ShowDialog() == true)
+            {
+                System.IO.FileInfo currentFile = new System.IO.FileInfo(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                destDir = currentFile.Directory.CreateSubdirectory("temp");
+
+                System.IO.FileInfo destFile = new System.IO.FileInfo(destDir.FullName + @"\" + currentFile.Name);
+                                
+                System.IO.File.Copy(currentFile.FullName, destDir.FullName + @"\" + currentFile.Name, true);
+                System.IO.File.Copy(currentFile.Directory.FullName + @"\Ionic.Zip.dll", destDir.FullName + @"\Ionic.Zip.dll", true);
+                System.IO.File.Copy(currentFile.Directory.FullName + @"\Jayrock.Json.dll", destDir.FullName + @"\Jayrock.Json.dll", true);
+                System.IO.File.Copy(currentFile.Directory.FullName + @"\libfbclientnet.dll", destDir.FullName + @"\libfbclientnet.dll", true);
+
+                ProcessStartInfo startInfo = new ProcessStartInfo(destFile.FullName, string.Format("-installUpdate -oldPID {0}", Process.GetCurrentProcess().Id));
+                Process.Start(startInfo);
+
+                return true;
+            }
+            return false;
+        }
+
+        private static void installUpdate()
+        {
+            foreach(System.Diagnostics.Process proc in System.Diagnostics.Process.GetProcesses()) {
+                if (proc.Id == _oldPID)
+                {
+                    while (!proc.HasExited)
+                    {
+                    }
+                }
+            }
+            
+            System.IO.FileInfo tempFile = new System.IO.FileInfo(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            Ionic.Zip.ZipFile zipFile = new Ionic.Zip.ZipFile(tempFile.Directory.Parent.GetFiles("fb-client.net.zip")[0].FullName);
+            zipFile.ExtractAll(tempFile.Directory.Parent.FullName, Ionic.Zip.ExtractExistingFileAction.OverwriteSilently);
+
+            System.IO.FileInfo destFile = new System.IO.FileInfo(tempFile.Directory.Parent.FullName + @"\" + tempFile.Name);
+
+            destFile.LastWriteTime = DateTime.Now;
+
+            ProcessStartInfo startInfo = new ProcessStartInfo(destFile.FullName);
+            Process.Start(startInfo);            
+        }
+
+        private static void cleanUp()
+        {
+            System.IO.FileInfo currentFile = new System.IO.FileInfo(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            string zipPath = currentFile.Directory.FullName + @"\fb-client.net.zip";
+
+            if (System.IO.File.Exists(zipPath))
+            {
+                System.IO.File.Delete(zipPath);
+            }
+
+            if (System.IO.Directory.Exists(currentFile.Directory.FullName + @"\temp"))
+            {
+                System.IO.Directory.Delete(currentFile.Directory.FullName + @"\temp", true);
+
+                if (System.IO.File.Exists(zipPath))
+                {
+                    System.IO.File.Delete(zipPath);
+                }
+            }            
+        }
+
     }
 }

@@ -1,9 +1,13 @@
+===== Version 1.1.0.1 / 2014-02-13 =====
+
+- FIX: added icon in update window
+
 ===== Version 1.1 / 2014-02-13 =====
 
-- implementing automatic updates
+- NEW: implementing automatic updates
 
 ===== Version 1.0 / 2013-10-10 =====
 
-- implementing single instance
-- switch from VB.NET to C#.NET
+- NEW: implementing single instance
+- NEW: switch from VB.NET to C#.NET
 

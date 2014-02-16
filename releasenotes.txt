@@ -1,3 +1,7 @@
+===== Version 1.1.0.2 / 2014-02-16 =====
+
+- FIX: new check for update method
+
 ===== Version 1.1.0.1 / 2014-02-13 =====
 
 - FIX: added icon in update window

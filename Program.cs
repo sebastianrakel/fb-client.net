@@ -25,6 +25,7 @@ namespace fb_client.net
 
         public static string updateLink = @"http://sebastianrakel.github.io/fb-client.net/files/fb-client.net.zip";
         public static string releaseNotesLinks = @"http://sebastianrakel.github.io/fb-client.net/releasenotes.txt";
+        public static string versionLinks = @"http://sebastianrakel.github.io/fb-client.net/version.txt";
 
 
         public static libfbclientnet.filebin filebin;
@@ -70,7 +71,7 @@ namespace fb_client.net
                 return;
             }
 
-            if (checkForUpdate())
+            if (checkForUpdateVersion())
             {
                 if (doUpdate()) {                    
                     return; 
@@ -419,6 +420,14 @@ namespace fb_client.net
                     System.IO.File.Delete(zipPath);
                 }
             }            
+        }
+
+        private static bool checkForUpdateVersion()
+        {
+            System.Net.WebClient webClient = new System.Net.WebClient();
+            string versionNet = webClient.DownloadString(versionLinks);
+
+            return Convert.ToInt32(versionNet.Replace(".", "")) > Convert.ToInt32(Application.ProductVersion.ToString().Replace(".", ""));
         }
 
     }

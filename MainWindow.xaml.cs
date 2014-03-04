@@ -153,12 +153,19 @@ namespace fb_client.net
 
         private void uploadFile(string filePath)
         {
-            this.clipboardLink.Visibility = System.Windows.Visibility.Hidden;
-            this.btnClipboardCopy.Visibility = System.Windows.Visibility.Hidden;
-            this.uploadProgressBar.Visibility = System.Windows.Visibility.Visible;
-            this.labelUploadProgress.Visibility = System.Windows.Visibility.Visible;
+            try
+            {
+                this.clipboardLink.Visibility = System.Windows.Visibility.Hidden;
+                this.btnClipboardCopy.Visibility = System.Windows.Visibility.Hidden;
+                this.uploadProgressBar.Visibility = System.Windows.Visibility.Visible;
+                this.labelUploadProgress.Visibility = System.Windows.Visibility.Visible;
 
-            Program.filebin.UploadFileAsync(filePath);
+                Program.filebin.UploadFileAsync(filePath);
+            }
+            catch (Exception ex)
+            {
+                fb_messageBox.ShowBox(ex);
+            }            
         }
 
         private void btnRefresh_Click(object sender, RoutedEventArgs e)

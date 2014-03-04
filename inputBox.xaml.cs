@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -26,6 +27,16 @@ namespace fb_client.net
         public inputBox()
         {
             InitializeComponent();
+
+            BitmapFrame bmpFrame;
+
+            MemoryStream iconStream = new MemoryStream();
+
+            fb_client.net.Properties.Resources.cloud_icon_png.Save(iconStream, System.Drawing.Imaging.ImageFormat.Png);
+            iconStream.Seek(0, SeekOrigin.Begin);
+            bmpFrame = BitmapFrame.Create(iconStream);
+
+            this.Icon = bmpFrame; 
         }        
 
         public static string ShowInput(string title, string defaultValue)

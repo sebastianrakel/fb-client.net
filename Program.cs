@@ -290,12 +290,19 @@ namespace fb_client.net
 
         public static void uploadFile(string path)
         {
-            if (_guiWindow != null && _guiWindow.IsVisible)
+            try
             {
-                _guiWindow.SetFileInfoDispatcher(path);
-            }
+                if (_guiWindow != null && _guiWindow.IsVisible)
+                {
+                    _guiWindow.SetFileInfoDispatcher(path);
+                }
 
-            filebin.UploadFileAsync(path);
+                filebin.UploadFileAsync(path);
+            }
+            catch (Exception ex)
+            {
+                fb_messageBox.ShowBox(ex);
+            }            
         }
 
         private static void ShowFBWindow_Click(object sender, EventArgs e)

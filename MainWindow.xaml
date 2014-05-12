@@ -21,6 +21,7 @@
                     <Label Content="drop file here" Margin="10,10,10,48" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="LightGray" Name="inputDragDrop" AllowDrop="True" Drop="inputDragDrop_Drop" />
                     <Button Content="upload" HorizontalAlignment="Left" Margin="10,0,0,6" Width="75" Height="37" VerticalAlignment="Bottom" Name="btnUploadFile" Visibility="Hidden" Click="btnUploadFile_Click"/>
                     <Button Content="search for file" Margin="0,0,10,6" Height="37" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="127" Name="btnSearchUploadFile" Click="btnSearchUploadFile_Click"/>
+                    <Button Content="take screenshot" Margin="364,0,0,6" Height="37" VerticalAlignment="Bottom" x:Name="btnTakeScreenshot" Click="btnTakeScreenshot_Click" HorizontalAlignment="Left" Width="127"/>
                 </Grid>
             </TabItem>
             <TabItem Header="History" Name="tpHistory">

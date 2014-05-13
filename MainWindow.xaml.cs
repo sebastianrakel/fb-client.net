@@ -364,5 +364,26 @@ namespace fb_client.net
                 fb_messageBox.ShowBox(ex);
             }
         }
+
+        private void btnTakeScreenshot_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                System.Drawing.Image img = SnippingTool.Snip();
+
+                if (img != null)
+                {
+                    string pTMPPath = System.IO.Path.GetTempPath() + "screenshot.png";
+
+                    img.Save(pTMPPath);
+
+                    SetFileInfo(pTMPPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                fb_messageBox.ShowBox(ex);
+            }
+        }
     }
 }

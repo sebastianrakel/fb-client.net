@@ -1,3 +1,7 @@
+===== Version 1.1.0.5 / 2014-05-13 =====
+
+- NEW: screenshot button in upload tab
+
 ===== Version 1.1.0.4 / 2014-02-16 =====
 
 - FIX: crashes after upload
